@@ -9,11 +9,14 @@ class Carga {
 public:
     int id;
     string descripcion;
+    string direccion;
     double peso;
-    string camionMatricula;  // Agregamos el identificador del camión
+    string camionMatricula;  // id del camion
+    bool fragilidad;
+    bool entregado;
 
-    Carga(int id, string descripcion, double peso, string camionMatricula)
-        : id(id), descripcion(descripcion), peso(peso), camionMatricula(camionMatricula) {}
+    Carga(int id, string descripcion, string direccion, double peso, string camionMatricula, bool fragilidad, bool entregado)
+        : id(id), descripcion(descripcion), direccion(direccion), peso(peso), camionMatricula(camionMatricula),fragilidad(fragilidad),entregado(entregado) {}
 };
 
 class Camion {
@@ -86,7 +89,7 @@ public:
         mostrarCargasC(con, matricula);
     }
 
-    void mostrarCargasC(sql::Connection* con, const string& matricula) {
+    void mostrarCargasC(sql::Connection* con, const string& matricula) { //PENDIENTE
         sql::PreparedStatement* pstmt;
         sql::ResultSet* res;
 
@@ -112,7 +115,7 @@ public:
         delete res;
     }
 
-    void consultarCargaPorID(sql::Connection* con, int id) {
+    void consultarCargaPorID(sql::Connection* con, int id) { //MOD
         sql::PreparedStatement* pstmt;
         sql::ResultSet* res;
 
@@ -125,6 +128,17 @@ public:
             cout << "Descripción: " << res->getString("descripcion") << "\n";
             cout << "Peso: " << res->getDouble("peso") << " kg\n";
             cout << "Camión Matrícula: " << res->getString("camion_matricula") << "\n";
+            //entregado
+            if (res->getBoolean("entregado")) {
+                cout << "La carga ha sido entregada." << "\n";
+            }else cout << "La carga aún no ha sido entregada." << "\n";
+            //fragilidad
+            if (res->getBoolean("fragilidad")) {
+                cout << "Carga frágil: Si" << "\n";
+            }else cout << "Carga frágil: No" << "\n";
+            // 
+            //direccion 
+            cout << "Dirección de entrega: " << res->getString("direccion") << "\n";
         }
         else {
             cout << "No se encontró ninguna carga con el ID proporcionado.\n";
@@ -134,7 +148,7 @@ public:
         delete res;
     }
 
-    void cargar(double carga, sql::Connection* con) {
+    void cargar(double carga, sql::Connection* con) { //MOD //PA
         cout << endl;
         mostrarMejorCamion(con, carga);
         cout << endl;
@@ -161,15 +175,22 @@ public:
                 cout << "Ingrese la descripción de la carga: ";
                 cin.ignore(); // Limpiar el buffer de entrada
                 getline(cin, descripcion);
+                string direccion;
+                cout << "Ingrese la dirección del destino de la carga: ";
+                cin.ignore();
+                getline(cin, direccion);
+                bool fragilidad;
+                cout << "Ingrese 1 si es frágil, 0 si no es frágil: ";
+                cin >> fragilidad;
 
                 pstmt = con->prepareStatement("UPDATE camiones SET cargaActual = ? WHERE matricula = ?");
                 pstmt->setDouble(1, cargaActual + carga);
                 pstmt->setString(2, matricula);
                 pstmt->executeUpdate();
                 cout << "Camión cargado exitosamente.\n";
-
+                bool entregado = false;
                 // Registrar la carga en la base de datos
-                Carga nuevaCarga(0, descripcion, carga, matricula);
+                Carga nuevaCarga(0, descripcion, direccion, carga, matricula, fragilidad, entregado);
                 registrarCarga(con, nuevaCarga);
 
                 // Mostrar el ID de la carga registrada
@@ -193,7 +214,7 @@ public:
         delete res;
     }
 
-    void descargar(sql::Connection* con) {
+    void descargar(sql::Connection* con) { //PENDIENTE //CAMBIAR A ENTREGAR
         // Mostrar las cargas del camión
         mostrarCargas(con);
 
@@ -310,13 +331,16 @@ public:
         delete res;
     }
 
-    void registrarCarga(sql::Connection* con, Carga carga) {
+    void registrarCarga(sql::Connection* con, Carga carga) { //MOD
         sql::PreparedStatement* pstmt;
 
-        pstmt = con->prepareStatement("INSERT INTO cargas (descripcion, peso, camion_matricula) VALUES (?, ?, ?)");
+        pstmt = con->prepareStatement("INSERT INTO cargas (descripcion, direccion, peso, camion_matricula, fragilidad, entregado) VALUES (?, ?, ?, ?, ?, ?)");
         pstmt->setString(1, carga.descripcion);
-        pstmt->setDouble(2, carga.peso);
-        pstmt->setString(3, carga.camionMatricula);
+        pstmt->setString(2, carga.direccion);
+        pstmt->setDouble(3, carga.peso);
+        pstmt->setString(4, carga.camionMatricula);
+        pstmt->setBoolean(5, carga.fragilidad);
+        pstmt->setBoolean(6, carga.entregado);
 
         pstmt->execute();
         delete pstmt;
