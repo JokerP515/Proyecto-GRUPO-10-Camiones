@@ -1,11 +1,3 @@
-/*Tener en cuenta que este código solo funciona si está instalada
-la librería Connector/C++ de MySQL, de igual forma
-es necesario ajustar el usuario y contraseña de la función void
-llamada "conectar", es mala práctica dejar eso ahí a la vista, sí;
-pero es algo que se irá ajustando para la siguiente entrega
-puede referirse al link del video adjunto en el PDF para ver el
-funcionamiento del programa*/
-
 #include <iostream>
 #include <mysql_driver.h>
 #include <mysql_connection.h>
