@@ -1,7 +1,8 @@
 Proyecto Grupo 10
 Nombres:
 - José David Díaz Quevedo
-- Edwin Hernan Vergara
+- Gabriela Ramírez Perdomo
+- Melissa Vela Martínez
 - Alisson Giselle Vargas
 
 Funciones del programa:
