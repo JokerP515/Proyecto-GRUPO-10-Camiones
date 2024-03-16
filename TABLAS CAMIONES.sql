@@ -13,7 +13,10 @@ CREATE TABLE IF NOT EXISTS cargas (
     descripcion VARCHAR(100),
     peso DOUBLE,
     camion_matricula VARCHAR(20),
-    FOREIGN KEY (camion_matricula) REFERENCES camiones(matricula)
+    FOREIGN KEY (camion_matricula) REFERENCES camiones(matricula),
+    fragilidad boolean,
+    entregado boolean,
+    direccion VARCHAR(100)
 );
 
 ALTER TABLE cargas AUTO_INCREMENT = 1;
