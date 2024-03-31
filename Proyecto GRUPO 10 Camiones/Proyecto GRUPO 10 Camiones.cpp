@@ -383,7 +383,7 @@ sql::Connection* conectar() {
     sql::Connection* con;
 
     driver = sql::mysql::get_mysql_driver_instance();
-    con = driver->connect("tcp://127.0.0.1:3306", "root", "HeBro065$");
+    con = driver->connect("tcp://127.0.0.1:3306", "root", "default");
     con->setSchema("transporte");
 
     return con;
