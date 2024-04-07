@@ -6,22 +6,43 @@
 using namespace std;
 
 class Carga {
-public:
+private:
     int id;
-    string descripcion;
     string direccion;
+    string camionMatricula;   // id del camion
+public:
+    string descripcion;
     double peso;
-    string camionMatricula;  // id del camion
     bool fragilidad;
     bool entregado;
 
     Carga(int id, string descripcion, string direccion, double peso, string camionMatricula, bool fragilidad, bool entregado)
         : id(id), descripcion(descripcion), direccion(direccion), peso(peso), camionMatricula(camionMatricula),fragilidad(fragilidad),entregado(entregado) {}
+    
+    void setId(int id) {
+        this->id = id;
+    }
+    int getId() const {
+        return this->id;
+    }
+    void setDireccion(string direccion) {
+        this->direccion = direccion;
+    }
+    string getDireccion() const {
+        return this->direccion;
+    }
+    void setCamionMatricula(string camionMatricula) {
+        this->camionMatricula = camionMatricula;
+    }
+    string getCamionMatricula() const {
+        return this->camionMatricula;
+    }
 };
 
 class Camion {
-public:
+private:
     string matricula;
+public:
     double capacidad;
     double consumo;
     double cargaActual;
@@ -29,8 +50,16 @@ public:
     Camion(string matricula, double capacidad, double consumo, double cargaActual)
         : matricula(matricula), capacidad(capacidad), consumo(consumo), cargaActual(cargaActual) {}
 
+    void setMatricula(string matricula) {
+        this->matricula = matricula;
+    }
+
+    const string getMatricula() {
+        return this->matricula;
+    }
+
     // Métodos públicos
-    void registrarCamion(sql::Connection* con) {
+    void registrarCamion(sql::Connection* con) { //Falta añadir una excepción para un camión que ya está
         sql::PreparedStatement* pstmt;
 
         cout << "Ingrese la matrícula del camión: ";
@@ -148,7 +177,7 @@ public:
         delete res;
     }
 
-    void cargar(double carga, sql::Connection* con) { //MOD //PA
+    void cargar(double carga, sql::Connection* con) { //MODIFIED //PA
         cout << endl;
         mostrarMejorCamion(con, carga);
         cout << endl;
@@ -331,14 +360,14 @@ public:
         delete res;
     }
 
-    void registrarCarga(sql::Connection* con, Carga carga) { //MOD
+    void registrarCarga(sql::Connection* con, Carga carga) { //MODIFIED
         sql::PreparedStatement* pstmt;
 
         pstmt = con->prepareStatement("INSERT INTO cargas (descripcion, direccion, peso, camion_matricula, fragilidad, entregado) VALUES (?, ?, ?, ?, ?, ?)");
         pstmt->setString(1, carga.descripcion);
-        pstmt->setString(2, carga.direccion);
+        pstmt->setString(2, carga.getDireccion()); //carga.direccion
         pstmt->setDouble(3, carga.peso);
-        pstmt->setString(4, carga.camionMatricula);
+        pstmt->setString(4, carga.getCamionMatricula()); //carga.camionMatricula
         pstmt->setBoolean(5, carga.fragilidad);
         pstmt->setBoolean(6, carga.entregado);
 
@@ -378,13 +407,19 @@ public:
 
 };
 
-sql::Connection* conectar() {
+static sql::Connection* conectar() {
     sql::mysql::MySQL_Driver* driver;
     sql::Connection* con;
 
-    driver = sql::mysql::get_mysql_driver_instance();
-    con = driver->connect("tcp://127.0.0.1:3306", "root", "default");
-    con->setSchema("transporte");
+    try {
+        driver = sql::mysql::get_driver_instance();
+        con = driver->connect("tcp://127.0.0.1:3306", "root", "HeBro065$");
+        con->setSchema("transporte");
+    }
+    catch (const sql::SQLException& exception) {
+        cerr << "Error al conectar a la base de datos: " << exception.what() << endl;
+        exit(-1); //Salir del programa porque no se pudo conectar
+    }
 
     return con;
 }
