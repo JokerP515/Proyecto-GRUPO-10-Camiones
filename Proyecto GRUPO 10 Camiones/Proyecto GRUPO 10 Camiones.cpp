@@ -17,8 +17,8 @@ public:
     bool entregado;
 
     Carga(int id, string descripcion, string direccion, double peso, string camionMatricula, bool fragilidad, bool entregado)
-        : id(id), descripcion(descripcion), direccion(direccion), peso(peso), camionMatricula(camionMatricula),fragilidad(fragilidad),entregado(entregado) {}
-    
+        : id(id), descripcion(descripcion), direccion(direccion), peso(peso), camionMatricula(camionMatricula), fragilidad(fragilidad), entregado(entregado) {}
+
     void setId(int id) {
         this->id = id;
     }
@@ -47,8 +47,7 @@ public:
     double consumo;
     double cargaActual;
 
-    Camion(string matricula, double capacidad, double consumo, double cargaActual)
-        : matricula(matricula), capacidad(capacidad), consumo(consumo), cargaActual(cargaActual) {}
+    Camion(string matricula, double capacidad, double consumo, double cargaActual) : matricula(matricula), capacidad(capacidad), consumo(consumo), cargaActual(cargaActual) {}
 
     void setMatricula(string matricula) {
         this->matricula = matricula;
@@ -58,28 +57,54 @@ public:
         return this->matricula;
     }
 
+    bool verificarCamionID(sql::Connection* con, const string& matricula) {
+        sql::PreparedStatement* pstmt;
+        sql::ResultSet* res;
+
+        bool v;
+
+        pstmt = con->prepareStatement("SELECT * FROM camiones WHERE matricula = ?");
+        pstmt->setString(1, matricula);
+
+        res = pstmt->executeQuery();
+
+        if (res->next()) {
+            v = false;
+        }
+        else v = true;
+
+        delete pstmt;
+        delete res;
+        return v;
+    }
+
     // Métodos públicos
-    void registrarCamion(sql::Connection* con) { //Falta añadir una excepción para un camión que ya está
+    void registrarCamion(sql::Connection* con) { //MODIFIED
         sql::PreparedStatement* pstmt;
 
         cout << "Ingrese la matrícula del camión: ";
         cin >> matricula;
-        cout << "Ingrese la capacidad de carga del camión (kg): ";
-        cin >> capacidad;
-        cout << "Ingrese el consumo de gasolina del camión (galones/km): ";
-        cin >> consumo;
-        cargaActual = 0;
+        if (verificarCamionID(con, matricula)) {
+            cout << "Ingrese la capacidad de carga del camión (kg): ";
+            cin >> capacidad;
+            cout << "Ingrese el consumo de gasolina del camión (galones/km): ";
+            cin >> consumo;
+            cargaActual = 0;
 
-        pstmt = con->prepareStatement("INSERT INTO camiones (matricula, capacidad, consumo, cargaActual) VALUES (?, ?, ?, ?)");
-        pstmt->setString(1, matricula);
-        pstmt->setDouble(2, capacidad);
-        pstmt->setDouble(3, consumo);
-        pstmt->setDouble(4, cargaActual);
+            pstmt = con->prepareStatement("INSERT INTO camiones (matricula, capacidad, consumo, cargaActual) VALUES (?, ?, ?, ?)");
+            pstmt->setString(1, matricula);
+            pstmt->setDouble(2, capacidad);
+            pstmt->setDouble(3, consumo);
+            pstmt->setDouble(4, cargaActual);
 
-        pstmt->execute();
-        delete pstmt;
+            pstmt->execute();
 
-        cout << "Camión registrado exitosamente.\n";
+            cout << "Camión registrado exitosamente.\n";
+            delete pstmt;
+        }
+
+        else cout << "El camión ya ha sido registrado previamente.";
+
     }
 
     void consultarCamionPorID(sql::Connection* con, const string& matricula) {
@@ -160,11 +185,13 @@ public:
             //entregado
             if (res->getBoolean("entregado")) {
                 cout << "La carga ha sido entregada." << "\n";
-            }else cout << "La carga aún no ha sido entregada." << "\n";
+            }
+            else cout << "La carga aún no ha sido entregada." << "\n";
             //fragilidad
             if (res->getBoolean("fragilidad")) {
                 cout << "Carga frágil: Si" << "\n";
-            }else cout << "Carga frágil: No" << "\n";
+            }
+            else cout << "Carga frágil: No" << "\n";
             // 
             //direccion 
             cout << "Dirección de entrega: " << res->getString("direccion") << "\n";
@@ -206,7 +233,7 @@ public:
                 getline(cin, descripcion);
                 string direccion;
                 cout << "Ingrese la dirección del destino de la carga: ";
-                cin.ignore();
+                //cin.ignore();
                 getline(cin, direccion);
                 bool fragilidad;
                 cout << "Ingrese 1 si es frágil, 0 si no es frágil: ";
@@ -407,6 +434,25 @@ public:
 
 };
 
+
+class Administrador : public Camion {
+private:
+
+    //Camion camion; //No es necesario
+public:
+    static Administrador* instancia;
+    Administrador() : Camion("", 0.0, 0.0, 0.0) {};
+    static Administrador* getInstancia() {
+        if (!instancia) {
+            instancia = new Administrador();
+        }
+        else cout << "Ya se ha creado un objeto administrador, no es posible crear otro.";
+        return instancia;
+    }
+};
+
+Administrador* Administrador::instancia = nullptr;
+
 static sql::Connection* conectar() {
     sql::mysql::MySQL_Driver* driver;
     sql::Connection* con;
@@ -427,7 +473,10 @@ static sql::Connection* conectar() {
 int main() {
     sql::Connection* con = conectar();
 
-    Camion camion("", 0.0, 0.0, 0.0);
+
+    Administrador* admin = Administrador::getInstancia();
+
+    //Camion camion("", 0.0, 0.0, 0.0);
 
     string matricula;
     double carga;
@@ -450,33 +499,40 @@ int main() {
 
         switch (opcion) {
         case 1:
-            camion.registrarCamion(con);
+            admin->registrarCamion(con);
+            //camion.registrarCamion(con);
             break;
         case 2:
             // Solicitar la matrícula del camión al usuario
             cout << "Ingrese la matrícula del camión: ";
             cin >> matricula;
-            camion.consultarCamionPorID(con, matricula);
+            admin->consultarCamionPorID(con, matricula);
+            //camion.consultarCamionPorID(con, matricula);
             break;
         case 3:
             cout << "Ingrese la carga a transportar (kg): ";
             cin >> carga;
-            camion.cargar(carga, con);
+            admin->cargar(carga, con);
+            //camion.cargar(carga, con);
             break;
         case 4:
-            camion.descargar(con);
+            admin->descargar(con);
+            //camion.descargar(con);
             break;
         case 5:
-            camion.mostrarCamiones(con);
+            admin->mostrarCamiones(con);
+            //camion.mostrarCamiones(con);
             break;
         case 6:
-            camion.mostrarCargas(con);
+            admin->mostrarCargas(con);
+            //camion.mostrarCargas(con);
             break;
         case 7:
             int id;
             cout << "Ingrese el ID de la carga a consultar: ";
             cin >> id;
-            camion.consultarCargaPorID(con, id);
+            admin->consultarCargaPorID(con, id);
+            //camion.consultarCargaPorID(con, id);
             break;
         case 8:
             break;
