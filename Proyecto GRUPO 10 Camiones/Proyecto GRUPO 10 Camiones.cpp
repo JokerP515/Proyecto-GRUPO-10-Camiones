@@ -204,7 +204,7 @@ public:
         delete res;
     }
 
-    void cargar(double carga, sql::Connection* con) { //MODIFIED //PA
+    void cargar(double carga, sql::Connection* con) { //MODIFIED //FIXED
         cout << endl;
         mostrarMejorCamion(con, carga);
         cout << endl;
