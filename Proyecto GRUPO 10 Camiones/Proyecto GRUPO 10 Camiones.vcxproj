@@ -73,10 +73,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\Program Files\MySQL\MySQL Connector C++ 8.1\include\jdbc;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64\vs14;C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64;C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64\vs14;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\Program Files\MySQL\MySQL Connector C++ 8.1\include\jdbc;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64\vs14;C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64;$(LibraryPath)</LibraryPath>
+    <ExecutablePath>C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64;C:\Program Files\MySQL\MySQL Connector C++ 8.1\lib64\vs14;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

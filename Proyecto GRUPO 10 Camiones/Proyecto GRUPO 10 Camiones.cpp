@@ -78,8 +78,7 @@ public:
         return v;
     }
 
-    // Métodos públicos
-    void registrarCamion(sql::Connection* con) { //MODIFIED
+    void registrarCamion(sql::Connection* con) { 
         sql::PreparedStatement* pstmt;
 
         cout << "Ingrese la matrícula del camión: ";
@@ -143,7 +142,7 @@ public:
         mostrarCargasC(con, matricula);
     }
 
-    void mostrarCargasC(sql::Connection* con, const string& matricula) { //PENDIENTE
+    void mostrarCargasC(sql::Connection* con, const string& matricula) { 
         sql::PreparedStatement* pstmt;
         sql::ResultSet* res;
 
@@ -158,6 +157,11 @@ public:
                 cout << "ID: " << res->getInt("id") << "\n";
                 cout << "Descripción: " << res->getString("descripcion") << "\n";
                 cout << "Peso: " << res->getDouble("peso") << " kg\n";
+                if (res->getBoolean("fragilidad")) {
+                    cout << "Carga frágil: Si" << "\n";
+                }
+                else cout << "Carga frágil: No" << "\n";
+                cout << "Dirección de entrega: " << res->getString("direccion") << "\n";
                 cout << "-----------------\n";
             } while (res->next());
         }
@@ -169,7 +173,7 @@ public:
         delete res;
     }
 
-    void consultarCargaPorID(sql::Connection* con, int id) { //MOD
+    void consultarCargaPorID(sql::Connection* con, int id) { 
         sql::PreparedStatement* pstmt;
         sql::ResultSet* res;
 
@@ -192,8 +196,7 @@ public:
                 cout << "Carga frágil: Si" << "\n";
             }
             else cout << "Carga frágil: No" << "\n";
-            // 
-            //direccion 
+
             cout << "Dirección de entrega: " << res->getString("direccion") << "\n";
         }
         else {
@@ -204,7 +207,7 @@ public:
         delete res;
     }
 
-    void cargar(double carga, sql::Connection* con) { //MODIFIED //FIXED
+    void cargar(double carga, sql::Connection* con) { 
         cout << endl;
         mostrarMejorCamion(con, carga);
         cout << endl;
@@ -231,10 +234,11 @@ public:
                 cout << "Ingrese la descripción de la carga: ";
                 cin.ignore(); // Limpiar el buffer de entrada
                 getline(cin, descripcion);
+
                 string direccion;
                 cout << "Ingrese la dirección del destino de la carga: ";
-                //cin.ignore();
                 getline(cin, direccion);
+                
                 bool fragilidad;
                 cout << "Ingrese 1 si es frágil, 0 si no es frágil: ";
                 cin >> fragilidad;
@@ -244,6 +248,7 @@ public:
                 pstmt->setString(2, matricula);
                 pstmt->executeUpdate();
                 cout << "Camión cargado exitosamente.\n";
+                
                 bool entregado = false;
                 // Registrar la carga en la base de datos
                 Carga nuevaCarga(0, descripcion, direccion, carga, matricula, fragilidad, entregado);
@@ -270,7 +275,7 @@ public:
         delete res;
     }
 
-    void descargar(sql::Connection* con) { //PENDIENTE //CAMBIAR A ENTREGAR
+    void descargar(sql::Connection* con) {
         // Mostrar las cargas del camión
         mostrarCargas(con);
 
@@ -387,7 +392,7 @@ public:
         delete res;
     }
 
-    void registrarCarga(sql::Connection* con, Carga carga) { //MODIFIED
+    void registrarCarga(sql::Connection* con, Carga carga) { 
         sql::PreparedStatement* pstmt;
 
         pstmt = con->prepareStatement("INSERT INTO cargas (descripcion, direccion, peso, camion_matricula, fragilidad, entregado) VALUES (?, ?, ?, ?, ?, ?)");
@@ -434,24 +439,26 @@ public:
 
 };
 
-
 class Administrador : public Camion {
 private:
-
-    //Camion camion; //No es necesario
-public:
-    static Administrador* instancia;
     Administrador() : Camion("", 0.0, 0.0, 0.0) {};
-    static Administrador* getInstancia() {
-        if (!instancia) {
-            instancia = new Administrador();
-        }
-        else cout << "Ya se ha creado un objeto administrador, no es posible crear otro.";
-        return instancia;
-    }
-};
+public:
 
-Administrador* Administrador::instancia = nullptr;
+    static Administrador* getInstancia() {
+        static Administrador instancia; // Instancia local estática
+        static bool verificarInstancia = false;
+
+        if (verificarInstancia) {
+            cout << "Se está intentando crear otra instancia, sin embargo, esto no es posible, vamos a usar la misma instancia ya creada." << endl;
+        }
+        else verificarInstancia = true;
+
+        return &instancia;
+    }
+
+    Administrador(const Administrador&) = delete; // Evita la copia de la instancia
+    Administrador& operator = (const Administrador&) = delete; // Evita la asignación de la instancia
+};
 
 static sql::Connection* conectar() {
     sql::mysql::MySQL_Driver* driver;
@@ -459,7 +466,7 @@ static sql::Connection* conectar() {
 
     try {
         driver = sql::mysql::get_driver_instance();
-        con = driver->connect("tcp://127.0.0.1:3306", "root", "default");
+        con = driver->connect("tcp://127.0.0.1:3306", "root", "HeBro065$");
         con->setSchema("transporte");
     }
     catch (const sql::SQLException& exception) {
@@ -472,11 +479,19 @@ static sql::Connection* conectar() {
 
 int main() {
     sql::Connection* con = conectar();
+    
+    //Esta parte funciona para verificar el patrón singleton.
+    /*Administrador* admin1 = Administrador::getInstancia();
+    Administrador* admin2 = Administrador::getInstancia();
 
-
+    if (admin1 == admin2) {
+        cout << "admin1 y admin2 son la misma instancia." << endl;
+    }
+    else {
+        cout << "admin1 y admin2 son diferentes instancias." << endl;
+    }*/
+    
     Administrador* admin = Administrador::getInstancia();
-
-    //Camion camion("", 0.0, 0.0, 0.0);
 
     string matricula;
     double carga;
