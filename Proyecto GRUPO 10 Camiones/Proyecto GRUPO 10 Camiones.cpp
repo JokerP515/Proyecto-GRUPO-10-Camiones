@@ -466,7 +466,7 @@ static sql::Connection* conectar() {
 
     try {
         driver = sql::mysql::get_driver_instance();
-        con = driver->connect("tcp://127.0.0.1:3306", "root", "HeBro065$");
+        con = driver->connect("tcp://127.0.0.1:3306", "root", "default");
         con->setSchema("transporte");
     }
     catch (const sql::SQLException& exception) {
